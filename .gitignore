@@ -480,3 +480,9 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# demo output
+data/out.log
+
+# sample logs are part of the repository
+!data/sample-*.log
