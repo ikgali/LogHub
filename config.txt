@@ -1,4 +1,4 @@
 input=data/sample-utf8.log
 minLevel=INFO
-sink=console
+profile=console
 output=data/out.log
