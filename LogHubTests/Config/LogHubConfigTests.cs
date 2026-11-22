@@ -12,7 +12,8 @@ public class LogHubConfigTests
             ("input", "data/custom.log"),
             ("minLevel", "WARN"),
             ("profile", "file"),
-            ("output", "data/custom-out.log"));
+            ("output", "data/custom-out.log"),
+            ("source", "json"));
 
         var result = LogHubConfig.From(config);
 
@@ -22,6 +23,7 @@ public class LogHubConfigTests
             Assert.That(result.MinLevel, Is.EqualTo(LogLevel.Warning));
             Assert.That(result.Profile, Is.EqualTo("file"));
             Assert.That(result.OutputPath, Is.EqualTo("data/custom-out.log"));
+            Assert.That(result.Source, Is.EqualTo("json"));
         });
     }
 
@@ -39,6 +41,14 @@ public class LogHubConfigTests
         var config = CreateConfig(("input", "data/sample-utf8.log"));
 
         Assert.That(LogHubConfig.From(config).MinLevel, Is.EqualTo(LogLevel.Info));
+    }
+
+    [Test]
+    public void From_SourceMissing_DefaultsToText()
+    {
+        var config = CreateConfig(("input", "data/sample-utf8.log"));
+
+        Assert.That(LogHubConfig.From(config).Source, Is.EqualTo("text"));
     }
 
     [Test]
