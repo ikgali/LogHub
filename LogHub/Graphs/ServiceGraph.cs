@@ -87,7 +87,6 @@ public sealed class ServiceGraph
         var importer = new Node("ILogImporter");
         var multiEncodingImporter = new Node("MultiEncodingFileImporter");
         var jsonImporter = new Node("JsonLogImporter");
-        var inMemoryImporter = new Node("InMemoryLogImporter");
         var lineParser = new Node("LogLineParser");
         var encodingDetector = new Node("EncodingDetector");
         var formatter = new Node("LogFormatter");
@@ -109,6 +108,11 @@ public sealed class ServiceGraph
         compositionRoot.AddDependency(filter);
         compositionRoot.AddDependency(sink);
 
+        compositionRoot.AddDependency(multiEncodingImporter);
+        compositionRoot.AddDependency(jsonImporter);
+        compositionRoot.AddDependency(consoleSink);
+        compositionRoot.AddDependency(fileSink);
+
         configService.AddDependency(configServiceContract);
         config.AddDependency(configServiceContract);
 
@@ -119,7 +123,6 @@ public sealed class ServiceGraph
 
         multiEncodingImporter.AddDependency(lineParser);
         multiEncodingImporter.AddDependency(encodingDetector);
-        inMemoryImporter.AddDependency(lineParser);
 
         consoleSink.AddDependency(config);
         fileSink.AddDependency(config);

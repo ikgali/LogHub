@@ -29,7 +29,7 @@ public static class CompositionRoot
         }
 
         var services = new ServiceCollection();
-        services.AddSingleton(configService);
+        services.AddSingleton<IConfigService>(configService);
         services.AddSingleton(config);
         services.AddSingleton<LogLineParser>();
         services.AddSingleton<LogFormatter>();

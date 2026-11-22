@@ -35,6 +35,15 @@ public class CompositionRootTests
     }
 
     [Test]
+    public void Build_RegistersConfigServiceByInterface()
+    {
+        var configService = new ConfigService();
+        using var provider = Build(configService: configService);
+
+        Assert.That(provider.GetRequiredService<IConfigService>(), Is.SameAs(configService));
+    }
+
+    [Test]
     public void Build_SourceMissing_RegistersMultiEncodingFileImporter()
     {
         using var provider = Build();
@@ -63,9 +72,12 @@ public class CompositionRootTests
         Assert.That(exception!.Message, Does.Contain("Неизвестный источник"));
     }
 
-    private static ServiceProvider Build(string profile = "console", string source = "text")
+    private static ServiceProvider Build(
+        string profile = "console",
+        string source = "text",
+        IConfigService? configService = null)
     {
-        var configService = new ConfigService();
+        configService ??= new ConfigService();
         var config = new LogHubConfig(
             "data/sample-utf8.log",
             LogLevel.Info,
