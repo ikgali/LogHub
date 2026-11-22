@@ -2,3 +2,4 @@ input=data/sample-utf8.log
 minLevel=INFO
 profile=console
 output=data/out.log
+source=text
