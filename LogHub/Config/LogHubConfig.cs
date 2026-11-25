@@ -5,5 +5,13 @@ namespace LogHub.Config;
 public sealed record LogHubConfig(
     string InputPath,
     LogLevel MinLevel,
-    IReadOnlyList<string> SinkNames,
-    string OutputPath);
+    string Profile,
+    string OutputPath)
+{
+    public static LogHubConfig From(IConfigService config) =>
+        new(
+            config.GetValue("input") ?? "data/sample-utf8.log",
+            LogLevelNames.Parse(config.GetValue("minLevel") ?? "INFO"),
+            config.GetValue("profile") ?? "console",
+            config.GetValue("output") ?? "data/out.log");
+}

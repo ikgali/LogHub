@@ -18,13 +18,13 @@ public sealed class LogProcessor
         LogLineParser parser,
         Func<LogEntry, bool> filter,
         LogFormatter formatter,
-        IReadOnlyList<ILogSink> sinks)
+        IEnumerable<ILogSink> sinks)
     {
         _reader = reader;
         _parser = parser;
         _filter = filter;
         _formatter = formatter;
-        _sinks = sinks;
+        _sinks = sinks.ToList();
     }
 
     public ProcessingResult Run()
