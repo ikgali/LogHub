@@ -1,0 +1,7 @@
+{"timestamp":"2026-11-22 10:00:01","level":"INFO","message":"Сервис запущен"}
+{"timestamp":"2026-11-22 10:00:02","level":"DEBUG","message":"Кэш прогрет"}
+{"timestamp":"2026-11-22 10:00:03","level":"WARN","message":"Медленный запрос к базе"}
+{"timestamp":"2026-11-22 10:00:04","level":"ERROR","message":"Не удалось открыть файл"}
+{"timestamp":"2026-11-22 10:00:05","level":"INFO","message":"Пользователь вошёл в систему"}
+{"timestamp":"2026-11-22 10:00:06","level":"INFO","message":"Обработка завершена"}
+{"broken json line

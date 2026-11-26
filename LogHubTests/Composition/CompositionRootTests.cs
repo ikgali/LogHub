@@ -1,4 +1,7 @@
 using LogHub.Composition;
+using LogHub.Config;
+using LogHub.Import;
+using LogHub.Parsing;
 using LogHub.Sinks;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,8 +12,7 @@ public class CompositionRootTests
     [Test]
     public void Build_ConsoleProfile_RegistersConsoleSink()
     {
-        using var config = new TempConfig("profile=console");
-        using var provider = CompositionRoot.Build(config.Path);
+        using var provider = Build();
 
         Assert.That(provider.GetRequiredService<ILogSink>(), Is.InstanceOf<ConsoleLogSink>());
     }
@@ -18,8 +20,7 @@ public class CompositionRootTests
     [Test]
     public void Build_FileProfile_RegistersFileSink()
     {
-        using var config = new TempConfig("profile=file");
-        using var provider = CompositionRoot.Build(config.Path);
+        using var provider = Build(profile: "file");
 
         Assert.That(provider.GetRequiredService<ILogSink>(), Is.InstanceOf<FileLogSink>());
     }
@@ -27,26 +28,62 @@ public class CompositionRootTests
     [Test]
     public void Build_UnknownProfile_ThrowsInvalidOperationException()
     {
-        using var config = new TempConfig("profile=telegram");
-
         var exception = Assert.Throws<InvalidOperationException>(
-            () => CompositionRoot.Build(config.Path));
+            () => Build(profile: "telegram"));
 
         Assert.That(exception!.Message, Does.Contain("Неизвестный профиль"));
     }
 
-    private sealed class TempConfig : IDisposable
+    [Test]
+    public void Build_RegistersConfigServiceByInterface()
     {
-        public TempConfig(string profileLine)
-        {
-            Path = System.IO.Path.Combine(
-                System.IO.Path.GetTempPath(),
-                $"loghub-config-{Guid.NewGuid():N}.txt");
-            File.WriteAllLines(Path, ["input=data/sample-utf8.log", "minLevel=INFO", profileLine]);
-        }
+        var configService = new ConfigService();
+        using var provider = Build(configService: configService);
 
-        public string Path { get; }
+        Assert.That(provider.GetRequiredService<IConfigService>(), Is.SameAs(configService));
+    }
 
-        public void Dispose() => File.Delete(Path);
+    [Test]
+    public void Build_SourceMissing_RegistersMultiEncodingFileImporter()
+    {
+        using var provider = Build();
+
+        Assert.That(
+            provider.GetRequiredService<ILogImporter>(),
+            Is.InstanceOf<MultiEncodingFileImporter>());
+    }
+
+    [Test]
+    public void Build_JsonSource_RegistersJsonLogImporter()
+    {
+        using var provider = Build(source: "json");
+
+        Assert.That(
+            provider.GetRequiredService<ILogImporter>(),
+            Is.InstanceOf<JsonLogImporter>());
+    }
+
+    [Test]
+    public void Build_UnknownSource_ThrowsInvalidOperationException()
+    {
+        var exception = Assert.Throws<InvalidOperationException>(
+            () => Build(source: "xml"));
+
+        Assert.That(exception!.Message, Does.Contain("Неизвестный источник"));
+    }
+
+    private static ServiceProvider Build(
+        string profile = "console",
+        string source = "text",
+        IConfigService? configService = null)
+    {
+        configService ??= new ConfigService();
+        var config = new LogHubConfig(
+            "data/sample-utf8.log",
+            LogLevel.Info,
+            profile,
+            "data/out.log",
+            source);
+        return CompositionRoot.Build(config, configService);
     }
 }

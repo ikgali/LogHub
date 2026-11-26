@@ -1,27 +1,24 @@
 using LogHub.Formatting;
+using LogHub.Import;
 using LogHub.Parsing;
-using LogHub.Reading;
 using LogHub.Sinks;
 
 namespace LogHub.Processing;
 
 public sealed class LogProcessor
 {
-    private readonly ILogReader _reader;
-    private readonly LogLineParser _parser;
+    private readonly ILogImporter _importer;
     private readonly Func<LogEntry, bool> _filter;
     private readonly LogFormatter _formatter;
     private readonly IReadOnlyList<ILogSink> _sinks;
 
     public LogProcessor(
-        ILogReader reader,
-        LogLineParser parser,
+        ILogImporter importer,
         Func<LogEntry, bool> filter,
         LogFormatter formatter,
         IEnumerable<ILogSink> sinks)
     {
-        _reader = reader;
-        _parser = parser;
+        _importer = importer;
         _filter = filter;
         _formatter = formatter;
         _sinks = sinks.ToList();
@@ -29,20 +26,13 @@ public sealed class LogProcessor
 
     public ProcessingResult Run()
     {
-        var read = 0;
+        var entries = _importer.Import();
+        var read = entries.Count;
         var written = 0;
         var skipped = 0;
 
-        foreach (var line in _reader.ReadLines())
+        foreach (var entry in entries)
         {
-            read++;
-
-            if (!_parser.TryParse(line, out var entry))
-            {
-                skipped++;
-                continue;
-            }
-
             if (!_filter(entry))
             {
                 skipped++;

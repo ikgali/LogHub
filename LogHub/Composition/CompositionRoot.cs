@@ -1,9 +1,9 @@
 using LogHub.Config;
 using LogHub.Filtering;
 using LogHub.Formatting;
+using LogHub.Import;
 using LogHub.Parsing;
 using LogHub.Processing;
-using LogHub.Reading;
 using LogHub.Sinks;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -15,14 +15,26 @@ public static class CompositionRoot
     {
         var configService = new ConfigService();
         ConfigLoader.LoadInto(configPath, configService);
-        var config = LogHubConfig.From(configService);
+        return Build(LogHubConfig.From(configService), configService);
+    }
+
+    public static ServiceProvider Build(LogHubConfig config, IConfigService configService)
+    {
+        var source = config.Source.ToLowerInvariant();
+
+        if (source is not ("text" or "json"))
+        {
+            throw new InvalidOperationException(
+                $"Неизвестный источник '{config.Source}'. Ожидается 'text' или 'json'.");
+        }
 
         var services = new ServiceCollection();
         services.AddSingleton<IConfigService>(configService);
         services.AddSingleton(config);
-        services.AddSingleton<ILogReader>(_ => new FileLogReader(config.InputPath));
         services.AddSingleton<LogLineParser>();
         services.AddSingleton<LogFormatter>();
+        services.AddSingleton<ILogImporter>(provider =>
+            CreateImporter(source, config.InputPath, provider.GetRequiredService<LogLineParser>()));
         services.AddSingleton<Func<LogEntry, bool>>(_ => LogFilters.ByMinLevel(config.MinLevel));
 
         switch (config.Profile.ToLowerInvariant())
@@ -41,4 +53,13 @@ public static class CompositionRoot
         services.AddSingleton<LogProcessor>();
         return services.BuildServiceProvider();
     }
+
+    private static ILogImporter CreateImporter(string source, string inputPath, LogLineParser parser) =>
+        source switch
+        {
+            "text" => new MultiEncodingFileImporter(inputPath, parser),
+            "json" => new JsonLogImporter(inputPath),
+            _ => throw new InvalidOperationException(
+                $"Неизвестный источник '{source}'. Ожидается 'text' или 'json'.")
+        };
 }
